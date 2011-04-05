@@ -547,7 +547,38 @@ private:
 };
 typedef QList<AddedFunction> AddedFunctionList;
 
+/**
+*   \internal
+*   Struct used to store information about fields added by the typesystem.
+*   This info will be used later to create a fake AbstractMetaField which
+*   will be inserted into the right AbstractMetaClass or into the module.
+*/
+struct APIEXTRACTOR_API AddedField
+{
+    /// Creates a new AddedField with name, type and value.
+    AddedField(QString name = QString(), QString type = QString(), double vr = 0.0);
+    /// Returns the field name.
+    const QString& name() const { return m_name; }
+    /// Returns the field type.
+    AddedFunction::TypeInfo type() const { return m_type; }
+    /// Returns the field value.
+    const QString& value() const;
+    /// Sets the value
+    void setValue(const QString& value);
+    /// Returns true if the AddedField is valid.
+    bool isValid() const;
+    /// Returns the API version since which the field should be added.
+    double version() const { return m_version; }
+private:
+    QString m_name;
+    AddedFunction::TypeInfo m_type;
+    double m_version;
+};
+typedef QList<AddedField> AddedFieldList;
+
 struct APIEXTRACTOR_API ExpensePolicy
+
+struct ExpensePolicy
 {
     ExpensePolicy() : limit(-1) {}
     int limit;
@@ -1441,6 +1472,7 @@ public:
         ComplexTypeEntry *centry = new ComplexTypeEntry(name(), type(), version());
         centry->setInclude(include());
         centry->setExtraIncludes(extraIncludes());
+        centry->setAddedFields(addedFields());
         centry->setAddedFunctions(addedFunctions());
         centry->setFunctionModifications(functionModifications());
         centry->setFieldModifications(fieldModifications());
@@ -1501,6 +1533,19 @@ public:
     void addNewFunction(const AddedFunction &addedFunction)
     {
         m_addedFunctions << addedFunction;
+    }
+
+    AddedFieldList addedFields() const
+    {
+        return m_addedFields;
+    }
+    void setAddedFields(const AddedFieldList& addedFields)
+    {
+        m_addedFields = addedFields;
+    }
+    void addNewField(const AddedField& addedField)
+    {
+        m_addedFields << addedField;
     }
 
     FieldModification fieldModification(const QString &name) const;
@@ -1646,6 +1691,7 @@ public:
 
 private:
     AddedFunctionList m_addedFunctions;
+    AddedFieldList m_addedFields;
     FunctionModificationList m_functionMods;
     FieldModificationList m_fieldMods;
     QString m_package;

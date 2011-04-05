@@ -122,6 +122,18 @@ public:
         m_templates[t->name()] = t;
     }
 
+    AddedFieldList globalUserFields() const
+    {
+        return m_globalUserFields;
+    }
+
+    void addGlobalUserFields(const AddedFieldList& fields)
+    {
+        m_globalUserFields << fields;
+    }
+
+    AddedField findGlobalUserField(const QString& name) const;
+
     AddedFunctionList globalUserFunctions() const
     {
         return m_globalUserFunctions;
@@ -221,6 +233,8 @@ private:
 
     double m_apiVersion;
     QStringList m_dropTypeEntries;
+
+    AddedFieldList m_globalUserFields;
 };
 
 #endif

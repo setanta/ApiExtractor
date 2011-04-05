@@ -87,6 +87,7 @@ Handler::Handler(TypeDatabase* database, bool generate)
     tagNames["inject-documentation"] = StackElement::InjectDocumentation;
     tagNames["modify-documentation"] = StackElement::ModifyDocumentation;
     tagNames["add-function"] = StackElement::AddFunction;
+    tagNames["add-field"] = StackElement::AddField;
 }
 
 bool Handler::error(const QXmlParseException &e)
@@ -158,6 +159,7 @@ bool Handler::endElement(const QString &, const QString &localName, const QStrin
     switch (m_current->type) {
     case StackElement::Root:
         if (m_generate == TypeEntry::GenerateAll) {
+            TypeDatabase::instance()->addGlobalUserFields(m_contextStack.top()->addedFields);
             TypeDatabase::instance()->addGlobalUserFunctions(m_contextStack.top()->addedFunctions);
             TypeDatabase::instance()->addGlobalUserFunctionModifications(m_contextStack.top()->functionMods);
             foreach (CustomConversion* customConversion, customConversionsForReview) {
@@ -171,6 +173,7 @@ bool Handler::endElement(const QString &, const QString &localName, const QStrin
     case StackElement::InterfaceTypeEntry:
     case StackElement::NamespaceTypeEntry: {
         ComplexTypeEntry *centry = static_cast<ComplexTypeEntry *>(m_current->entry);
+        centry->setAddedFields(m_contextStack.top()->addedFields);
         centry->setAddedFunctions(m_contextStack.top()->addedFunctions);
         centry->setFunctionModifications(m_contextStack.top()->functionMods);
         centry->setFieldModifications(m_contextStack.top()->fieldMods);
@@ -278,6 +281,12 @@ bool Handler::characters(const QString &ch)
 
     if (m_current->type == StackElement::CustomMetaConstructor || m_current->type == StackElement::CustomMetaDestructor) {
         m_current->value.customFunction->addCode(ch);
+        return true;
+    }
+
+    if (m_current->type == StackElement::AddField) {
+        AddedField& addedField = m_contextStack.top()->addedFields.last();
+        addedField.setValue(QString("%1 %2").arg(addedField.value()).arg(ch.trimmed()).trimmed());
         return true;
     }
 
@@ -913,6 +922,7 @@ bool Handler::startElement(const QString &, const QString &n,
                         || element->type == StackElement::ExtraIncludes
                         || element->type == StackElement::ConversionRule
                         || element->type == StackElement::AddFunction
+                        || element->type == StackElement::AddField
                         || element->type == StackElement::Template;
 
         if (!topLevel && m_current->type == StackElement::Root) {
@@ -952,6 +962,10 @@ bool Handler::startElement(const QString &, const QString &n,
             attributes["return-type"] = QString("void");
             attributes["access"] = QString("public");
             attributes["static"] = QString("no");
+            break;
+        case StackElement::AddField:
+            attributes["name"] = QString();
+            attributes["type"] = QString();
             break;
         case StackElement::ModifyFunction:
             attributes["signature"] = QString();
@@ -1472,6 +1486,25 @@ bool Handler::startElement(const QString &, const QString &n,
             FunctionModification mod(since);
             mod.signature = m_currentSignature;
             m_contextStack.top()->functionMods << mod;
+        }
+        break;
+        case StackElement::AddField: {
+            if (!(topElement.type & (StackElement::ComplexTypeEntryMask | StackElement::Root))) {
+                m_error = QString::fromLatin1("Added field requires a complex type or a root tag as parent"
+                                              ", was=%1").arg(topElement.type, 0, 16);
+                return false;
+            }
+            QString name = attributes["name"];
+            if (name.isEmpty()) {
+                m_error = "The added field must have a name";
+                return false;
+            }
+            QString type = attributes["type"];
+            if (type.isEmpty()) {
+                m_error = "The added field must have a type";
+                return false;
+            }
+            m_contextStack.top()->addedFields << AddedField(name, type, since);
         }
         break;
         case StackElement::ModifyFunction: {
@@ -2155,6 +2188,28 @@ AddedFunction::AddedFunction(QString signature, QString returnType, double vr) :
         // is const?
         m_isConst = signature.right(signatureLength - endPos).contains("const");
     }
+}
+
+AddedField::AddedField(QString name, QString type, double vr)
+    : m_name(name), m_version(vr)
+{
+    m_type = parseType(type);
+}
+
+const QString& AddedField::value() const
+{
+    return m_type.defaultValue;
+}
+
+void AddedField::setValue(const QString& value)
+{
+    if (!m_type.name.isEmpty())
+        m_type.defaultValue = value;
+}
+
+bool AddedField::isValid() const
+{
+    return !(m_name.isEmpty() || m_type.name.isEmpty() || m_type.defaultValue.isEmpty());
 }
 
 QString ComplexTypeEntry::targetLangApiName() const

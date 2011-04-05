@@ -62,6 +62,7 @@ AbstractMetaBuilder::AbstractMetaBuilder() : m_currentClass(0), m_logDirectory(Q
 AbstractMetaBuilder::~AbstractMetaBuilder()
 {
     qDeleteAll(m_globalEnums);
+    qDeleteAll(m_globalFields);
     qDeleteAll(m_globalFunctions);
     qDeleteAll(m_templates);
     qDeleteAll(m_metaClasses);
@@ -598,6 +599,13 @@ bool AbstractMetaBuilder::build(QIODevice* input)
         m_globalFunctions << metaFunc;
     }
 
+    // Fields added to the module on the type system.
+    foreach (const AddedField addedField, types->globalUserFields()) {
+        AbstractMetaField* metaField = traverseField(addedField);
+        if (metaField)
+            m_globalFields << metaField;
+    }
+
     std::puts("");
     return true;
 }
@@ -1056,6 +1064,7 @@ AbstractMetaClass* AbstractMetaBuilder::traverseTypeAlias(TypeAliasModelItem typ
     if (!type->include().isValid())
         setInclude(type, typeAlias->fileName());
 
+    fillAddedFields(metaClass);
     fillAddedFunctions(metaClass);
 
     return metaClass;
@@ -1521,7 +1530,15 @@ void AbstractMetaBuilder::traverseFunctions(ScopeModelItem scopeItem, AbstractMe
         }
     }
 
+    fillAddedFields(metaClass);
     fillAddedFunctions(metaClass);
+}
+
+void AbstractMetaBuilder::fillAddedFields(AbstractMetaClass* metaClass)
+{
+    // Add the fields added by the typesystem
+    foreach (AddedField addedField, metaClass->typeEntry()->addedFields())
+        traverseField(addedField, metaClass);
 }
 
 void AbstractMetaBuilder::fillAddedFunctions(AbstractMetaClass* metaClass)
@@ -1685,6 +1702,39 @@ void AbstractMetaBuilder::traverseEnums(ScopeModelItem scopeItem, AbstractMetaCl
             metaEnum->setEnclosingClass(metaClass);
         }
     }
+}
+
+AbstractMetaField* AbstractMetaBuilder::traverseField(const AddedField& addedField, AbstractMetaClass* enclosingClass)
+{
+    if (!addedField.isValid())
+        return 0;
+
+    AbstractMetaField* metaField = createMetaField();
+    metaField->setName(addedField.name());
+    if (enclosingClass)
+        metaField->setEnclosingClass(enclosingClass);
+
+    AbstractMetaType* metaType = translateType(addedField.version(), addedField.type());
+    if (!metaType) {
+        QString fieldName = addedField.name();
+        if (m_currentClass)
+            fieldName = m_currentClass->name() + "::" + fieldName;
+        ReportHandler::warning(QString("skipping added field '%1' with unmatched type '%2'")
+                               .arg(fieldName)
+                               .arg(addedField.type().name));
+        delete metaField;
+        return 0;
+    }
+    decideUsagePattern(metaType);
+    metaField->setType(metaType);
+    metaField->setDefaultValueExpression(addedField.value());
+    metaField->setUserAdded(true);
+    metaField->setAttributes(AbstractMetaAttributes::Static);
+
+    if (enclosingClass)
+        enclosingClass->addField(metaField);
+
+    return metaField;
 }
 
 AbstractMetaFunction* AbstractMetaBuilder::traverseFunction(const AddedFunction& addedFunc)

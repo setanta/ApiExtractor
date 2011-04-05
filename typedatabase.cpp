@@ -262,6 +262,15 @@ FlagsTypeEntry* TypeDatabase::findFlagsType(const QString &name) const
     return fte;
 }
 
+AddedField TypeDatabase::findGlobalUserField(const QString& name) const
+{
+    foreach (AddedField field, m_globalUserFields) {
+        if (field.name() == name)
+            return field;
+    }
+    return AddedField();
+}
+
 AddedFunctionList TypeDatabase::findGlobalUserFunctions(const QString& name) const
 {
     AddedFunctionList addedFunctions;

@@ -53,6 +53,7 @@ public:
     void setDropTypeEntries(QString dropEntries);
 
     AbstractMetaEnumList globalEnums() const;
+    AbstractMetaFieldList globalFields() const;
     AbstractMetaFunctionList globalFunctions() const;
     AbstractMetaClassList classes() const;
     PrimitiveTypeEntryList primitiveTypes() const;

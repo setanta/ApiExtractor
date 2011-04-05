@@ -672,6 +672,23 @@ public:
         return m_doc;
     }
 
+    QString defaultValueExpression() const
+    {
+        return m_expression;
+    }
+    void setDefaultValueExpression(const QString& expr)
+    {
+        m_expression = expr;
+    }
+    QString originalDefaultValueExpression() const
+    {
+        return m_originalExpression;
+    }
+    void setOriginalDefaultValueExpression(const QString& expr)
+    {
+        m_originalExpression = expr;
+    }
+
 private:
     QString m_originalName;
     QString m_name;
@@ -679,6 +696,9 @@ private:
     bool m_hasName;
 
     Documentation m_doc;
+
+    QString m_expression;
+    QString m_originalExpression;
 };
 
 
@@ -688,28 +708,10 @@ class APIEXTRACTOR_API AbstractMetaArgument : public AbstractMetaVariable
 public:
     AbstractMetaArgument() : m_argumentIndex(0) {};
 
-    QString defaultValueExpression() const
-    {
-        return m_expression;
-    }
-    void setDefaultValueExpression(const QString &expr)
-    {
-        m_expression = expr;
-    }
-
-    QString originalDefaultValueExpression() const
-    {
-        return m_originalExpression;
-    }
-    void setOriginalDefaultValueExpression(const QString &expr)
-    {
-        m_originalExpression = expr;
-    }
-
     QString toString() const
     {
         return type()->name() + " " + AbstractMetaVariable::name() +
-               (m_expression.isEmpty() ? "" :  " = " + m_expression);
+               (defaultValueExpression().isEmpty() ? "" :  " = " + defaultValueExpression());
     }
 
     int argumentIndex() const
@@ -723,8 +725,6 @@ public:
 
     AbstractMetaArgument *copy() const;
 private:
-    QString m_expression;
-    QString m_originalExpression;
     int m_argumentIndex;
 
     friend class AbstractMetaClass;
@@ -758,10 +758,22 @@ public:
 
     AbstractMetaField *copy() const;
 
+    /// Returns true if the AbstractMetaField was added by the user via the type system description.
+    bool isUserAdded() const
+    {
+        return m_userAdded;
+    }
+    void setUserAdded(bool userAdded)
+    {
+        m_userAdded = userAdded;
+    }
+
 private:
     mutable AbstractMetaFunction *m_getter;
     mutable AbstractMetaFunction *m_setter;
     const AbstractMetaClass *m_class;
+    QString m_initialValue;
+    uint m_userAdded                : 1;
 };
 
 class APIEXTRACTOR_API AbstractMetaFunction : public AbstractMetaAttributes

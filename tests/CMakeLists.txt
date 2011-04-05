@@ -12,6 +12,7 @@ endmacro(declare_test testname)
 
 declare_test(testabstractmetaclass)
 declare_test(testabstractmetatype)
+declare_test(testaddfield)
 declare_test(testaddfunction)
 declare_test(testarrayargument)
 declare_test(testcodeinjection)

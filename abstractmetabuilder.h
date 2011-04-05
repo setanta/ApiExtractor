@@ -117,6 +117,7 @@ public:
     void traverseFields(ScopeModelItem item, AbstractMetaClass *parent);
     void traverseStreamOperator(FunctionModelItem functionItem);
     void traverseOperatorFunction(FunctionModelItem item);
+    AbstractMetaField* traverseField(const AddedField& addedField, AbstractMetaClass* enclosingClass = 0);
     AbstractMetaFunction* traverseFunction(const AddedFunction& addedFunc);
     AbstractMetaFunction* traverseFunction(const AddedFunction& addedFunc, AbstractMetaClass* metaClass);
     AbstractMetaFunction *traverseFunction(FunctionModelItem function);
@@ -157,6 +158,11 @@ public:
     const AbstractMetaFunctionList globalFunctions() const
     {
         return m_globalFunctions;
+    }
+
+    const AbstractMetaFieldList globalFields() const
+    {
+        return m_globalFields;
     }
 
     const AbstractMetaEnumList globalEnums() const
@@ -235,11 +241,13 @@ private:
     AbstractMetaArgumentList reverseList(const AbstractMetaArgumentList& list);
     void setInclude(TypeEntry* te, const QString& fileName) const;
     void fixArgumentNames(AbstractMetaFunction* func);
+    void fillAddedFields(AbstractMetaClass* metaClass);
     void fillAddedFunctions(AbstractMetaClass* metaClass);
 
     AbstractMetaClassList m_metaClasses;
     AbstractMetaClassList m_templates;
     AbstractMetaFunctionList m_globalFunctions;
+    AbstractMetaFieldList m_globalFields;
     AbstractMetaEnumList m_globalEnums;
 
     QSet<const TypeEntry *> m_usedTypes;

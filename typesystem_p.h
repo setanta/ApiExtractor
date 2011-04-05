@@ -53,7 +53,7 @@ class StackElement
             ModifyDocumentation         = 0x20,
             DocumentationMask           = 0xf0,
 
-            // Simple tags (0x100, 0x200, ... , 0xf00)
+            // Simple tags (0x0100, 0x0200, ... , 0x2000)
             ExtraIncludes               = 0x0100,
             Include                     = 0x0200,
             ModifyFunction              = 0x0300,
@@ -73,6 +73,7 @@ class StackElement
             NativeToTarget              = 0x1100,
             TargetToNative              = 0x1200,
             AddConversion               = 0x1300,
+            AddField                    = 0x2000,
             SimpleMask                  = 0x3f00,
 
             // Code snip tags (0x1000, 0x2000, ... , 0xf000)
@@ -118,6 +119,7 @@ struct StackElementContext
 {
     CodeSnipList codeSnips;
     AddedFunctionList addedFunctions;
+    AddedFieldList addedFields;
     FunctionModificationList functionMods;
     FieldModificationList fieldMods;
     DocModificationList docModifications;
