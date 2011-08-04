@@ -1435,15 +1435,50 @@ bool AbstractMetaClass::hasDefaultToStringFunction() const
     return false;
 }
 
+static void compareFunctionArguments(AbstractMetaFunction* func, AbstractMetaFunction* newFunc)
+{
+    if (!newFunc->isUserAdded())
+        return;
+    if (func->name() != newFunc->name())
+        return;
+    int minSize = qMin(func->arguments().count(), newFunc->arguments().count());
+    int removed = 0;
+    for (int i = 0; i < minSize; ++i) {
+        if (func->argumentRemoved(i+1)) {
+            removed++;
+            if (removed + i > minSize)
+                return;
+        }
+        const AbstractMetaType* type = func->arguments().at(i+removed)->type();
+        const AbstractMetaType* addedType = newFunc->arguments().at(i)->type();
+        if (type->typeEntry() != addedType->typeEntry())
+            return;
+        if (type->isReference() != addedType->isReference()) {
+            QString warn = QString("Argument in position %1 of added function '%2::%3', has a type that is%4 a reference, "\
+                                   "while the argument in the corresponding position in C++ function '%2::%5' is%6 a reference.")
+                              .arg(i+1)
+                              .arg(func->ownerClass()->qualifiedCppName())
+                              .arg(newFunc->signature())
+                              .arg(addedType->isReference() ? "" : " not")
+                              .arg(func->signature())
+                              .arg(type->isReference() ? "" : " not");
+            ReportHandler::warning(warn);
+        }
+    }
+}
+
 void AbstractMetaClass::addFunction(AbstractMetaFunction *function)
 {
     Q_ASSERT(!function->signature().startsWith("("));
     function->setOwnerClass(this);
 
-    if (!function->isDestructor())
+    if (!function->isDestructor()) {
+        foreach (AbstractMetaFunction* func, m_functions)
+            compareFunctionArguments(func, function);
         m_functions << function;
-    else
+    } else {
         Q_ASSERT(false); //memory leak
+    }
 
     m_hasVirtualSlots |= function->isVirtualSlot();
     m_hasVirtuals |= !function->isFinal() || function->isVirtualSlot() || hasVirtualDestructor();
