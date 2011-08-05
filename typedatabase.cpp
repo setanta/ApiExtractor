@@ -50,7 +50,15 @@ TypeDatabase* TypeDatabase::instance(bool newInstance)
 
 QString TypeDatabase::normalizedSignature(const char* signature)
 {
-    QString normalized = QMetaObject::normalizedSignature(signature);
+    QString normalized = QString(signature).trimmed();
+    if (normalized.contains("const ")) {
+        static QRegExp constness("\\bconst\\b\\s+((?:(?:::)?[A-Za-z_0-9]+)+\\s*&)");
+        int startArgs = normalized.indexOf('(');
+        int endArgs = normalized.lastIndexOf(')');
+        QString args = normalized.mid(startArgs, endArgs - startArgs + 1).replace(constness, "\\1");
+        normalized = normalized.left(startArgs) + args + normalized.right(normalized.size() - endArgs - 1);
+    }
+    normalized = QMetaObject::normalizedSignature(normalized.toAscii().constData());
 
     if (!instance() || !QString(signature).contains("unsigned"))
         return normalized;

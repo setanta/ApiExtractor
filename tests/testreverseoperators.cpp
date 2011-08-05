@@ -103,11 +103,11 @@ void TestReverseOperators::testReverseSumWithAmbiguity()
     QVERIFY(normalOp);
     QVERIFY(!normalOp->isReverseOperator());
     QCOMPARE(normalOp->arguments().count(), 1);
-    QCOMPARE(normalOp->minimalSignature(), QString("operator+(B,A)"));
+    QCOMPARE(normalOp->minimalSignature(), QString("operator+(B&,A&)"));
     QVERIFY(reverseOp);
     QVERIFY(reverseOp->isReverseOperator());
     QCOMPARE(reverseOp->arguments().count(), 1);
-    QCOMPARE(reverseOp->minimalSignature(), QString("operator+(A,B)"));
+    QCOMPARE(reverseOp->minimalSignature(), QString("operator+(A&,B&)"));
 
     reverseOp = classA->findFunction("operator-");
     QVERIFY(reverseOp);

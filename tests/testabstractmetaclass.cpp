@@ -67,7 +67,7 @@ void TestAbstractMetaClass::testClassNameUnderNamespace()
     QCOMPARE(ctors[0]->arguments().size(), 0);
     QCOMPARE(ctors[0]->minimalSignature(), QString("ClassName()"));
     QCOMPARE(ctors[1]->arguments().size(), 1);
-    QCOMPARE(ctors[1]->minimalSignature(), QString("ClassName(Namespace::ClassName)"));
+    QCOMPARE(ctors[1]->minimalSignature(), QString("ClassName(Namespace::ClassName&)"));
 
     QVERIFY(!classes[0]->hasPrivateDestructor());
     QVERIFY(classes[0]->hasCloneOperator()); // implicit default copy ctor
@@ -285,7 +285,7 @@ void TestAbstractMetaClass::testClassDefaultConstructors()
     QCOMPARE(ctors[0]->arguments().size(), 0);
     QCOMPARE(ctors[0]->minimalSignature(), QString("A()"));
     QCOMPARE(ctors[1]->arguments().size(), 1);
-    QCOMPARE(ctors[1]->minimalSignature(), QString("A(A)"));
+    QCOMPARE(ctors[1]->minimalSignature(), QString("A(A&)"));
 
     AbstractMetaClass* classB = classes.findClass("B");
     QVERIFY(classB);
@@ -295,12 +295,12 @@ void TestAbstractMetaClass::testClassDefaultConstructors()
     AbstractMetaClass* classC = classes.findClass("C");
     QVERIFY(classC);
     QCOMPARE(classC->functions().size(), 1);
-    QCOMPARE(classC->functions().first()->minimalSignature(), QString("C(C)"));
+    QCOMPARE(classC->functions().first()->minimalSignature(), QString("C(C&)"));
 
     AbstractMetaClass* classD = classes.findClass("D");
     QVERIFY(classD);
     QCOMPARE(classD->functions().size(), 1);
-    QCOMPARE(classD->functions().first()->minimalSignature(), QString("D(D)"));
+    QCOMPARE(classD->functions().first()->minimalSignature(), QString("D(D&)"));
     QVERIFY(classD->functions().first()->isPrivate());
 
     AbstractMetaClass* classE = classes.findClass("E");
@@ -319,7 +319,7 @@ void TestAbstractMetaClass::testClassDefaultConstructors()
     QCOMPARE(ctors[0]->arguments().size(), 2);
     QCOMPARE(ctors[0]->minimalSignature(), QString("F(int,int)"));
     QCOMPARE(ctors[1]->arguments().size(), 1);
-    QCOMPARE(ctors[1]->minimalSignature(), QString("F(F)"));
+    QCOMPARE(ctors[1]->minimalSignature(), QString("F(F&)"));
 }
 
 void TestAbstractMetaClass::testClassInheritedDefaultConstructors()
@@ -352,7 +352,7 @@ void TestAbstractMetaClass::testClassInheritedDefaultConstructors()
     QCOMPARE(ctors[0]->arguments().size(), 0);
     QCOMPARE(ctors[0]->minimalSignature(), QString("A()"));
     QCOMPARE(ctors[1]->arguments().size(), 1);
-    QCOMPARE(ctors[1]->minimalSignature(), QString("A(A)"));
+    QCOMPARE(ctors[1]->minimalSignature(), QString("A(A&)"));
     QVERIFY(ctors[1]->isPrivate());
 
     AbstractMetaClass* classB = classes.findClass("B");
